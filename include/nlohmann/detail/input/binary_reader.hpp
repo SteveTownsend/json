@@ -158,6 +158,32 @@ class binary_reader
         return result;
     }
 
+/*!
+  @param[in] format  the binary format to parse
+  @param[in] tag_handler  how to treat CBOR tags
+
+  @return whether parsing was successful
+  */
+  bool sax_parse_iterative(const detail::input_format_t format,
+                           const bool allow_exceptions = true,
+                           const detail::cbor_tag_handler_t tag_handler =
+                               detail::cbor_tag_handler_t::error) {
+    bool result = false;
+
+    switch (format) {
+    case input_format_t::cbor:
+      result =
+          parse_cbor_internal_iterative(true, allow_exceptions, tag_handler);
+      break;
+    default: // LCOV_EXCL_LINE
+      JSON_ASSERT(
+          false); // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert)
+                  // LCOV_EXCL_LINE
+    }
+
+    return result;
+  }
+
   private:
     //////////
     // BSON //
@@ -2981,7 +3007,54 @@ class binary_reader
         return concat(error_msg, ' ', context, ": ", detail);
     }
 
+  /*!
+  @param[in] get_char  whether a new character should be retrieved from the
+                       input (true) or whether the last read character should
+                       be considered instead (false)
+  @param[in] tag_handler how CBOR tags should be treated
+
+  @return whether a valid CBOR value was passed to the SAX parser
+  */
+  bool
+  parse_cbor_internal_iterative(const bool get_char,
+                                const bool allow_exceptions,
+                                const detail::cbor_tag_handler_t tag_handler) {
+    std::vector<json> results;
+    try {
+      // consume the entire buffer as a sequence of CBOR objects
+      while (true) {
+        basic_json result;
+        sax = SAX(result,
+                  std::bind(&binary_reader_iterative::parser_callback, this,
+                            std::placeholders::_1, std::placeholders::_2,
+                            std::placeholders::_3),
+                  allow_exceptions);
+        if (parse_cbor_internal(get_char, tag_handle)) {
+          results.push_back(result);
+        } else {
+          return false;
+        }
+      }
+    } catch (std::exception const &exc) {
+               return sax->parse_error(
+                   chars_read, get_token_string(),
+                   parse_error::create(
+                       110, chars_read,
+                       exception_message(
+                           input_format,
+                           concat("expected end of input; last byte: 0x",
+                                  get_token_string()),
+                           "value"),
+                       nullptr));
+    }
+  }
+
   private:
+    bool parser_callback(int depth, detail::parse_event_t event,
+                         BasicJsonType &parsed) {
+      return true;
+    }
+
     static JSON_INLINE_VARIABLE constexpr std::size_t npos = static_cast<std::size_t>(-1);
 
     /// input adapter

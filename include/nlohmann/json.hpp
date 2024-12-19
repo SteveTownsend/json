@@ -4456,6 +4456,20 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         return res ? result : basic_json(value_t::discarded);
     }
 
+/// @brief create a JSON value from an input in CBOR format
+/// @sa https://json.nlohmann.me/api/basic_json/from_cbor/
+template <typename InputType>
+JSON_HEDLEY_WARN_UNUSED_RESULT
+static basic_json from_cbor_iterative(
+    IteratorType first, IteratorType last, const bool allow_exceptions = true,
+    const cbor_tag_handler_t tag_handler = cbor_tag_handler_t::error) {
+  auto ia = detail::input_adapter(std::move(first), std::move(last));
+  const bool res =
+      binary_reader_iterative<decltype(ia)>(std::move(ia), input_format_t::cbor)
+          .sax_parse_iterative(input_format_t::cbor, allow_exceptions,
+                               tag_handler);
+  return res ? result : basic_json(value_t::discarded);
+}
     /// @brief create a JSON value from an input in MessagePack format
     /// @sa https://json.nlohmann.me/api/basic_json/from_msgpack/
     template<typename InputType>

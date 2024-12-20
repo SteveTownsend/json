@@ -76,6 +76,7 @@ class binary_reader
     using json_sax_t = SAX;
     using char_type = typename InputAdapterType::char_type;
     using char_int_type = typename char_traits<char_type>::int_type;
+    using parser_callback_t = typename BasicJsonType::parser_callback_t;
 
   public:
     /*!

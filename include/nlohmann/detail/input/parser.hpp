@@ -44,7 +44,9 @@ enum class parse_event_t : std::uint8_t
     /// the parser read a key of a value in an object
     key,
     /// the parser finished reading a JSON value
-    value
+    value,
+    /// sequence parser finished parsing a top-level object
+    result
 };
 
 template<typename BasicJsonType>

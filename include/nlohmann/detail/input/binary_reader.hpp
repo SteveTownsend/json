@@ -3032,7 +3032,7 @@ private:
             while (true)
             {
                 basic_json result;
-                sax = SAX(result,
+                sax = std::make_unique<SAX>(result,
                           cb,
                           allow_exceptions);
                 if (parse_cbor_internal(get_char, tag_handler))

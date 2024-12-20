@@ -4467,7 +4467,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         const cbor_tag_handler_t tag_handler = cbor_tag_handler_t::error)
     {
         auto ia = detail::input_adapter(std::move(first), std::move(last));
-        return ::nlohmann::detail::binary_reader<basic_json, decltype(ia), ::nlohmann::detail::json_sax_dom_callback_parser>(std::move(ia), input_format_t::cbor)
+        return ::nlohmann::detail::binary_reader<basic_json, decltype(ia), ::nlohmann::detail::json_sax_dom_callback_parser<basic_json, decltype(ia)>>(std::move(ia), input_format_t::cbor)
                 .sax_parse_sequence(input_format_t::cbor, cb, allow_exceptions, tag_handler);
     }
 

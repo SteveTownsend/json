@@ -3034,7 +3034,7 @@ private:
                 basic_json result;
                 SAX this_pass_sax(result,
                           cb,
-                          allow_exceptions)
+                          allow_exceptions);
                 sax = &this_pass_sax;
                 if (parse_cbor_internal(get_char, tag_handler))
                 {

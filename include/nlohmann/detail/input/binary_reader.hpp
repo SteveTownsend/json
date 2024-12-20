@@ -3032,9 +3032,10 @@ private:
             while (true)
             {
                 basic_json result;
-                sax = std::make_unique<SAX>(result,
+                SAX this_pass_sax(result,
                           cb,
-                          allow_exceptions);
+                          allow_exceptions)
+                sax = &this_pass_sax;
                 if (parse_cbor_internal(get_char, tag_handler))
                 {
                     // check callback for top-level object parse completion

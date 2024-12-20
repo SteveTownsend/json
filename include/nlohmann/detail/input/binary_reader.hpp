@@ -165,6 +165,7 @@ class binary_reader
   @return whether parsing was successful
   */
   bool sax_parse_iterative(const detail::input_format_t format,
+        detail::parser_callback_t<basic_json> cb = nullptr,
                            const bool allow_exceptions = true,
                            const detail::cbor_tag_handler_t tag_handler =
                                detail::cbor_tag_handler_t::error) {
@@ -173,7 +174,7 @@ class binary_reader
     switch (format) {
     case input_format_t::cbor:
       result =
-          parse_cbor_internal_iterative(true, allow_exceptions, tag_handler);
+          parse_cbor_internal_iterative(true, cb, allow_exceptions, tag_handler);
       break;
     default: // LCOV_EXCL_LINE
       JSON_ASSERT(
@@ -3017,6 +3018,7 @@ class binary_reader
   */
   bool
   parse_cbor_internal_iterative(const bool get_char,
+        detail::parser_callback_t<basic_json> cb,
                                 const bool allow_exceptions,
                                 const detail::cbor_tag_handler_t tag_handler) {
     std::vector<json> results;
@@ -3025,9 +3027,7 @@ class binary_reader
       while (true) {
         basic_json result;
         sax = SAX(result,
-                  std::bind(&binary_reader_iterative::parser_callback, this,
-                            std::placeholders::_1, std::placeholders::_2,
-                            std::placeholders::_3),
+                  cb,
                   allow_exceptions);
         if (parse_cbor_internal(get_char, tag_handle)) {
           results.push_back(result);

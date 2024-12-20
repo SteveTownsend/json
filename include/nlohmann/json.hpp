@@ -4461,12 +4461,14 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
 template <typename InputType>
 JSON_HEDLEY_WARN_UNUSED_RESULT
 static basic_json from_cbor_iterative(
-    IteratorType first, IteratorType last, const bool allow_exceptions = true,
+    IteratorType first, IteratorType last, 
+        detail::parser_callback_t<basic_json> cb = nullptr,
+const bool allow_exceptions = true,
     const cbor_tag_handler_t tag_handler = cbor_tag_handler_t::error) {
   auto ia = detail::input_adapter(std::move(first), std::move(last));
   const bool res =
       binary_reader_iterative<decltype(ia)>(std::move(ia), input_format_t::cbor)
-          .sax_parse_iterative(input_format_t::cbor, allow_exceptions,
+          .sax_parse_iterative(input_format_t::cbor, cb, allow_exceptions,
                                tag_handler);
   return res ? result : basic_json(value_t::discarded);
 }

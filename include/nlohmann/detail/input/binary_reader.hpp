@@ -3034,6 +3034,10 @@ private:
                       cb,
                       allow_exceptions);
             sax = &this_pass_sax;
+            // check for empty stream, or end of well-formed object at EOF
+            char_int_type next_char(this_pass_sax.get());
+            if (next_char == char_traits<char_type>::eof())
+                return true;
             if (parse_cbor_internal(get_char, tag_handler))
             {
                 // check callback for top-level object parse completion

@@ -3035,7 +3035,8 @@ private:
                           allow_exceptions);
                 if (parse_cbor_internal(get_char, tag_handler))
                 {
-                    cb(result);
+                    // check callback for top-level object parse completion
+                    const bool keep = cb(0, parse_event_t::result, result);
                 }
                 else
                 {

@@ -3026,42 +3026,23 @@ private:
                                  const bool allow_exceptions,
                                  const cbor_tag_handler_t tag_handler)
     {
-        try
+        // consume the entire buffer as a sequence of CBOR objects
+        while (true)
         {
-            // consume the entire buffer as a sequence of CBOR objects
-            while (true)
+            basic_json result;
+            SAX this_pass_sax(result,
+                      cb,
+                      allow_exceptions);
+            sax = &this_pass_sax;
+            if (parse_cbor_internal(get_char, tag_handler))
             {
-                basic_json result;
-                SAX this_pass_sax(result,
-                          cb,
-                          allow_exceptions);
-                sax = &this_pass_sax;
-                if (parse_cbor_internal(get_char, tag_handler))
-                {
-                    // check callback for top-level object parse completion
-                    const bool keep = cb(0, parse_event_t::result, result);
-                }
-                else
-                {
-                    return false;
-                }
+                // check callback for top-level object parse completion
+                const bool keep = cb(0, parse_event_t::result, result);
             }
-        }
-        catch (std::exception const& exc)
-        {
-            // TODO fix this up
-            return sax->parse_error(
-                chars_read,
-                get_token_string(),
-                parse_error::create(
-                    110,
-                    chars_read,
-                    exception_message(
-                        input_format,
-                        concat("expected end of input; last byte: 0x",
-                               get_token_string()),
-                        "value"),
-                    nullptr));
+            else
+            {
+                return false;
+            }
         }
     }
 

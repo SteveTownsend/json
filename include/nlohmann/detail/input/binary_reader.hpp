@@ -158,7 +158,36 @@ class binary_reader
         return result;
     }
 
-  private:
+    /*!
+  @param[in] format  the binary format to parse
+  @param[in] tag_handler  how to treat CBOR tags
+
+  @return whether parsing was successful
+  */
+    bool sax_parse_iterative(const detail::input_format_t format,
+                             parser_callback_t cb = nullptr,
+                             const bool allow_exceptions = true,
+                             const cbor_tag_handler_t tag_handler =
+                                 cbor_tag_handler_t::error)
+    {
+        bool result = false;
+
+        switch (format)
+        {
+            case input_format_t::cbor:
+                result =
+                    parse_cbor_internal_iterative(true, cb, allow_exceptions, tag_handler);
+                break;
+            default:  // LCOV_EXCL_LINE
+                JSON_ASSERT(
+                    false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert)
+                             // LCOV_EXCL_LINE
+        }
+
+        return result;
+    }
+
+private:
     //////////
     // BSON //
     //////////
@@ -2979,6 +3008,57 @@ class binary_reader
         }
 
         return concat(error_msg, ' ', context, ": ", detail);
+    }
+
+    /*!
+  @param[in] get_char  whether a new character should be retrieved from the
+                       input (true) or whether the last read character should
+                       be considered instead (false)
+  @param[in] tag_handler how CBOR tags should be treated
+
+  @return whether a valid CBOR value was passed to the SAX parser
+  */
+    bool
+    parse_cbor_internal_iterative(const bool get_char,
+                                  parser_callback_t cb,
+                                  const bool allow_exceptions,
+                                  const cbor_tag_handler_t tag_handler)
+    {
+        try
+        {
+            // consume the entire buffer as a sequence of CBOR objects
+            while (true)
+            {
+                basic_json result;
+                sax = SAX(result,
+                          cb,
+                          allow_exceptions);
+                if (parse_cbor_internal(get_char, tag_handler))
+                {
+                    cb(result);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+        catch (std::exception const& exc)
+        {
+            // TODO fix this up
+            return sax->parse_error(
+                chars_read,
+                get_token_string(),
+                parse_error::create(
+                    110,
+                    chars_read,
+                    exception_message(
+                        input_format,
+                        concat("expected end of input; last byte: 0x",
+                               get_token_string()),
+                        "value"),
+                    nullptr));
+        }
     }
 
   private:

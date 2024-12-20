@@ -4459,7 +4459,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     /// @brief create a JSON value from an input in CBOR format
     /// @sa https://json.nlohmann.me/api/basic_json/from_cbor/
     template<typename IteratorType>
-    JSON_HEDLEY_WARN_UNUSED_RESULT static basic_json from_cbor_iterative(
+    JSON_HEDLEY_WARN_UNUSED_RESULT static bool from_cbor_sequence(
         IteratorType first,
         IteratorType last,
         parser_callback_t cb = nullptr,
@@ -4468,9 +4468,9 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     {
         auto ia = detail::input_adapter(std::move(first), std::move(last));
         const bool res =
-            binary_reader_iterative<decltype(ia)>(std::move(ia), input_format_t::cbor)
-                .sax_parse_iterative(input_format_t::cbor, cb, allow_exceptions, tag_handler);
-        return res ? result : basic_json(value_t::discarded);
+            binary_reader<decltype(ia)>(std::move(ia), input_format_t::cbor)
+                .sax_parse_sequence(input_format_t::cbor, cb, allow_exceptions, tag_handler);
+        return res;
     }
 
     /// @brief create a JSON value from an input in MessagePack format

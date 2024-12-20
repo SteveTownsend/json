@@ -164,11 +164,11 @@ class binary_reader
 
   @return whether parsing was successful
   */
-    bool sax_parse_iterative(const detail::input_format_t format,
-                             parser_callback_t cb = nullptr,
-                             const bool allow_exceptions = true,
-                             const cbor_tag_handler_t tag_handler =
-                                 cbor_tag_handler_t::error)
+    bool sax_parse_sequence(const detail::input_format_t format,
+                            parser_callback_t cb = nullptr,
+                            const bool allow_exceptions = true,
+                            const cbor_tag_handler_t tag_handler =
+                                cbor_tag_handler_t::error)
     {
         bool result = false;
 
@@ -176,7 +176,7 @@ class binary_reader
         {
             case input_format_t::cbor:
                 result =
-                    parse_cbor_internal_iterative(true, cb, allow_exceptions, tag_handler);
+                    parse_cbor_internal_sequence(true, cb, allow_exceptions, tag_handler);
                 break;
             default:  // LCOV_EXCL_LINE
                 JSON_ASSERT(
@@ -3019,10 +3019,10 @@ private:
   @return whether a valid CBOR value was passed to the SAX parser
   */
     bool
-    parse_cbor_internal_iterative(const bool get_char,
-                                  parser_callback_t cb,
-                                  const bool allow_exceptions,
-                                  const cbor_tag_handler_t tag_handler)
+    parse_cbor_internal_sequence(const bool get_char,
+                                 parser_callback_t cb,
+                                 const bool allow_exceptions,
+                                 const cbor_tag_handler_t tag_handler)
     {
         try
         {

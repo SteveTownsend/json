@@ -178,7 +178,7 @@ class binary_reader
         {
             case input_format_t::cbor:
                 result =
-                    parse_cbor_internal_sequence(true, cb, allow_exceptions, tag_handler);
+                    parse_cbor_internal_sequence(cb, allow_exceptions, tag_handler);
                 break;
             default:  // LCOV_EXCL_LINE
                 JSON_ASSERT(
@@ -3021,8 +3021,7 @@ private:
   @return whether a valid CBOR value was passed to the SAX parser
   */
     bool
-    parse_cbor_internal_sequence(const bool get_char,
-                                 parser_callback_t cb,
+    parse_cbor_internal_sequence(parser_callback_t cb,
                                  const bool allow_exceptions,
                                  const cbor_tag_handler_t tag_handler)
     {
@@ -3035,10 +3034,10 @@ private:
                       allow_exceptions);
             sax = &this_pass_sax;
             // check for empty stream, or end of well-formed object at EOF
-            char_int_type next_char(this_pass_sax.get());
+            char_int_type next_char(get());
             if (next_char == char_traits<char_type>::eof())
                 return true;
-            if (parse_cbor_internal(get_char, tag_handler))
+            if (parse_cbor_internal(false, tag_handler))
             {
                 // check callback for top-level object parse completion
                 const bool keep = cb(0, parse_event_t::result, result);

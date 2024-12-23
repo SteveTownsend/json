@@ -189,7 +189,7 @@ class binary_reader
         return result;
     }
 
-private:
+protected:
     //////////
     // BSON //
     //////////
@@ -3049,7 +3049,7 @@ private:
         }
     }
 
-  private:
+  protected:
     static JSON_INLINE_VARIABLE constexpr std::size_t npos = static_cast<std::size_t>(-1);
 
     /// input adapter

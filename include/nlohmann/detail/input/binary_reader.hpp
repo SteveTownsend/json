@@ -204,6 +204,35 @@ class binary_reader
         return result;
     }
 
+    /*!
+  @param[in] format  the binary format to parse
+  @param[in] tag_handler  how to treat CBOR tags
+
+  @return whether parsing was successful
+  */
+    bool sax_parse_sequence(const detail::input_format_t format,
+                            parser_callback_t cb = nullptr,
+                            const bool allow_exceptions = true,
+                            const cbor_tag_handler_t tag_handler =
+                                cbor_tag_handler_t::error)
+    {
+        bool result = false;
+
+        switch (format)
+        {
+            case input_format_t::cbor:
+                result =
+                    parse_cbor_internal_sequence(cb, allow_exceptions, tag_handler);
+                break;
+            default:  // LCOV_EXCL_LINE
+                JSON_ASSERT(
+                    false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert)
+                             // LCOV_EXCL_LINE
+        }
+
+        return result;
+    }
+
   private:
     ////////////////////////
     // nested containers  //
@@ -348,34 +377,6 @@ class binary_reader
         frame.start_position = document_start;
         frame.declared_size = document_size;
         return true;
-    }
-    /*!
-  @param[in] format  the binary format to parse
-  @param[in] tag_handler  how to treat CBOR tags
-
-  @return whether parsing was successful
-  */
-    bool sax_parse_sequence(const detail::input_format_t format,
-                            parser_callback_t cb = nullptr,
-                            const bool allow_exceptions = true,
-                            const cbor_tag_handler_t tag_handler =
-                                cbor_tag_handler_t::error)
-    {
-        bool result = false;
-
-        switch (format)
-        {
-            case input_format_t::cbor:
-                result =
-                    parse_cbor_internal_sequence(cb, allow_exceptions, tag_handler);
-                break;
-            default:  // LCOV_EXCL_LINE
-                JSON_ASSERT(
-                    false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert)
-                             // LCOV_EXCL_LINE
-        }
-
-        return result;
     }
 
     /*!
@@ -4425,10 +4426,10 @@ class binary_reader
                       allow_exceptions);
             sax = &this_pass_sax;
             // check for empty stream, or end of well-formed object at EOF
-            char_int_type next_char(get_character());
+            char_int_type next_char(get());
             if (next_char == char_traits<char_type>::eof())
                 return true;
-            release_lookahead();
+            unget_bon8(next_char);
             if (parse_cbor_internal(tag_handler))
             {
                 // check callback for top-level object parse completion

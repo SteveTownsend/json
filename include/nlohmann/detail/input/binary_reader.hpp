@@ -1532,6 +1532,7 @@ class binary_reader
         return true;
     }
 
+public:
     /*!
     @brief read a CBOR value and everything nested inside it
 
@@ -1638,7 +1639,7 @@ class binary_reader
     /////////////
     // MsgPack //
     /////////////
-
+private:
     /*!
     @brief read one MessagePack value
 
@@ -3845,7 +3846,7 @@ class binary_reader
     ///////////////////////
     // Utility functions //
     ///////////////////////
-
+public:
     /*!
     @brief get next character from the input
 
@@ -3860,7 +3861,7 @@ class binary_reader
         ++chars_read;
         return current = ia.get_character();
     }
-
+private:
     /*!
     @brief get_to read into a primitive type
 
@@ -4351,7 +4352,7 @@ class binary_reader
         return last_byte_error(exception_id::invalid_string_or_size,
                                concat("expected length type specification (", types, ")", position, "; last byte: 0x", get_token_string()), context);
     }
-
+public:
     /*!
     @return a string representation of the last read byte
     */
@@ -4404,6 +4405,7 @@ class binary_reader
         return concat(error_msg, ' ', context, ": ", detail);
     }
 
+private:
     /*!
   @param[in] get_char  whether a new character should be retrieved from the
                        input (true) or whether the last read character should

@@ -97,6 +97,8 @@ class binary_reader
     using json_sax_t = SAX;
     using char_type = typename InputAdapterType::char_type;
     using char_int_type = typename char_traits<char_type>::int_type;
+    using parser_callback_t = typename BasicJsonType::parser_callback_t;
+    using parse_event_t = typename BasicJsonType::parse_event_t;
 
     /// whether the input is a contiguous block of bytes that can be inspected
     /// and consumed in bulk (as in the lexer); used by @ref get_bon8_string_bulk
@@ -346,6 +348,34 @@ class binary_reader
         frame.start_position = document_start;
         frame.declared_size = document_size;
         return true;
+    }
+    /*!
+  @param[in] format  the binary format to parse
+  @param[in] tag_handler  how to treat CBOR tags
+
+  @return whether parsing was successful
+  */
+    bool sax_parse_sequence(const detail::input_format_t format,
+                            parser_callback_t cb = nullptr,
+                            const bool allow_exceptions = true,
+                            const cbor_tag_handler_t tag_handler =
+                                cbor_tag_handler_t::error)
+    {
+        bool result = false;
+
+        switch (format)
+        {
+            case input_format_t::cbor:
+                result =
+                    parse_cbor_internal_sequence(cb, allow_exceptions, tag_handler);
+                break;
+            default:  // LCOV_EXCL_LINE
+                JSON_ASSERT(
+                    false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert)
+                             // LCOV_EXCL_LINE
+        }
+
+        return result;
     }
 
     /*!
@@ -4373,7 +4403,45 @@ class binary_reader
         return concat(error_msg, ' ', context, ": ", detail);
     }
 
-  private:
+    /*!
+  @param[in] get_char  whether a new character should be retrieved from the
+                       input (true) or whether the last read character should
+                       be considered instead (false)
+  @param[in] tag_handler how CBOR tags should be treated
+
+  @return whether a valid CBOR value was passed to the SAX parser
+  */
+    bool
+    parse_cbor_internal_sequence(parser_callback_t cb,
+                                 const bool allow_exceptions,
+                                 const cbor_tag_handler_t tag_handler)
+    {
+        // consume the entire buffer as a sequence of CBOR objects
+        while (true)
+        {
+            basic_json result;
+            SAX this_pass_sax(result,
+                      cb,
+                      allow_exceptions);
+            sax = &this_pass_sax;
+            // check for empty stream, or end of well-formed object at EOF
+            char_int_type next_char(get_character());
+            if (next_char == char_traits<char_type>::eof())
+                return true;
+            release_lookahead();
+            if (parse_cbor_internal(tag_handler))
+            {
+                // check callback for top-level object parse completion
+                const bool keep = cb(0, parse_event_t::result, result);
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+  protected:
     static JSON_INLINE_VARIABLE constexpr std::size_t npos = detail::unknown_size();
 
     /// input adapter

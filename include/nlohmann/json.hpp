@@ -6562,6 +6562,21 @@ public:
     }
 #endif
 
+    /// @brief create a JSON value from an input in CBOR format
+    /// @sa https://json.nlohmann.me/api/basic_json/from_cbor/
+    template<typename IteratorType>
+    JSON_HEDLEY_WARN_UNUSED_RESULT static bool from_cbor_sequence(
+        IteratorType first,
+        IteratorType last,
+        parser_callback_t cb = nullptr,
+        const bool allow_exceptions = true,
+        const cbor_tag_handler_t tag_handler = cbor_tag_handler_t::error)
+    {
+        auto ia = detail::input_adapter(std::move(first), std::move(last));
+        return ::nlohmann::detail::binary_reader<basic_json, decltype(ia), ::nlohmann::detail::json_sax_dom_callback_parser<basic_json, decltype(ia)>>(std::move(ia), input_format_t::cbor)
+                .sax_parse_sequence(input_format_t::cbor, cb, allow_exceptions, tag_handler);
+    }
+
     /// @brief create a JSON value from an input in MessagePack format
     /// @sa https://json.nlohmann.me/api/basic_json/from_msgpack/
     template<typename InputType>
